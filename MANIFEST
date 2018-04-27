@@ -1,0 +1,9 @@
+Changes
+dist.ini
+lib/Locale/Country/EU.pm
+Makefile.PL
+MANIFEST
+README
+t/Locale-Country-EU.t
+xt/00-list_countries.t
+xt/01-is_eu_country.t
