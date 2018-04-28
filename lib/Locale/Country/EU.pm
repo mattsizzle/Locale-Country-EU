@@ -1,9 +1,8 @@
 package Locale::Country::EU;
 
+use 5.016003;
 use strict;
 use warnings;
-
-use 5.016003;
 
 use Carp;
 use Data::Util qw( is_hash_ref is_array_ref);
