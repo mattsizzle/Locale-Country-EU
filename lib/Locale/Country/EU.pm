@@ -19,10 +19,8 @@ our %EXPORT_TAGS = ( 'all' => [ qw(
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
-our @EXPORT = qw();
 
-our $VERSION = '0.001';
-# ABSTRACT: Module to check if a country is in the EU ( Europe )
+# ABSTRACT: Module to check if a country is in the European Union ( EU ) using various ISO data formats
 
 our $EU_COUNTRY_MAP = [
     {
@@ -226,18 +224,116 @@ our $EU_COUNTRY_MAP = [
 
 our $ISO_CODES = [ 'ISO-name', 'ISO-m49', 'ISO-alpha3', 'ISO-alpha2', 'EFTA-member' ];
 
+sub is_eu_country {
+    my %args = @_ == 1 && is_hash_ref( $_[0] ) ? %{ $_[0] } : @_;
+
+    croak "Agrument country is required"
+        unless ($args{country});
+
+    croak "Agrument exclude must be an ARRAY"
+        if ($args{exclude} && !is_array_ref($args{exclude}) );
+
+    my $include_EFTA = $args{include_efta} // 0;
+    my $exclude_arr  = $args{exclude} // [];
+    my $check_country = $args{country};
+
+    foreach my $country ( @{$EU_COUNTRY_MAP} )
+    {
+        if ( ! $include_EFTA ) {
+            if ( $country->{'EFTA-member'} ) {
+                next;
+            }
+        }
+
+        my @country_values = values $country;
+        if ( length $exclude_arr > 0 ) {
+            my $should_exclude;
+            foreach my $elt ( @{$exclude_arr} ) {
+                if ( grep { /$elt/xg } @country_values ) {
+                    $should_exclude = 1;
+                    last;
+                }
+            }
+
+            if ( $should_exclude ) {
+                next;
+            }
+        }
+
+        foreach my $value ( values $country )
+        {
+            if ( ref($value) eq 'ARRAY' ) {
+                if ( grep { /^$check_country$/xg } @{$value} ) {
+                    return 1;
+                }
+            }
+
+            if ( $value eq $check_country ) {
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+sub list_eu_countries {
+    my %args = @_ == 1 && is_hash_ref( $_[0] ) ? %{ $_[0] } : @_;
+
+    croak "Agrument exclude must be an ARRAY"
+        if ($args{exclude} && ! is_array_ref($args{exclude}) );
+
+    my $include_EFTA = $args{include_efta} // 0;
+    my $exclude_arr = $args{exclude} // [ ];
+    my $data_key = $args{iso_code};
+
+    if ( $data_key && ! grep { /^$data_key$/xg } @{$ISO_CODES} ) {
+        croak "Argument iso_code must be one of 'ISO-name', 'ISO-m49', 'ISO-alpha3', 'ISO-alpha2'";
+    }
+
+
+    my @return_countries;
+
+    foreach my $country ( @{$EU_COUNTRY_MAP} )
+    {
+        if ( ! $include_EFTA ) {
+            if ( $country->{'EFTA-member'} ) {
+                next;
+            }
+        }
+
+        my @country_values = values $country;
+        if ( length $exclude_arr > 0 ) {
+            my $should_exclude;
+            foreach my $elt ( @{$exclude_arr} ) {
+                if ( grep { /$elt/xg } @country_values ) {
+                    $should_exclude = 1;
+                    last;
+                }
+            }
+
+            if ( $should_exclude ) {
+                next;
+            }
+        }
+
+        if ( $data_key ) {
+            push @return_countries, $country->{$data_key};
+        } else {
+            push @return_countries, $country;
+        }
+    }
+
+    return \@return_countries;
+}
+
+1;
+
+__END__
+
 =head1 NAME
 
-Locale::Country::EU - Perl extension for determining if a country is within the European Union based on the
-following ISO data.
-
-    'ISO-name'   => 'Germany',
-    'ISO-m49'    => '276',
-    'ISO-alpha3' => 'DEU',
-    'ISO-alpha2' => 'DE',
-
-This Module also allows for list customization with additional helper arguments. These are handy in cases like GDPR
-where certain conditions can cause the list data to change.
+Locale::Country::EU
 
 =head1 SYNOPSIS
 
@@ -255,13 +351,23 @@ where certain conditions can cause the list data to change.
 
 =head1 DESCRIPTION
 
-Provides a list of EU countries with various ISO data and allows for checking if a country is in the EU.
+Locale::Country::EU - Perl extension for determining if a country is within the European Union based on the
+following ISO data.
 
+    'ISO-name'   => 'Germany',
+    'ISO-m49'    => '276',
+    'ISO-alpha3' => 'DEU',
+    'ISO-alpha2' => 'DE',
+
+This Module also allows for list customization with additional helper arguments. These are handy in cases like GDPR
+where certain conditions can cause the list data to change.
 
 =head2 EXPORT
 
     is_eu_country
     list_eu_countries
+    $ISO_CODES
+    $EU_COUNTRY_MAP
 
 =head1 AUTHOR
 
@@ -305,112 +411,41 @@ NOTE: You do not have to specific the ISO type being provided for flexiblity as 
 
 =cut
 
-sub is_eu_country {
-    my %args = @_ == 1 && is_hash_ref( $_[0] ) ? %{ $_[0] } : @_;
+=head2 list_eu_countries ()
 
-    croak "Agrument country is required"
-        unless ($args{country});
+Returns a DataSet of countries in the European Union (EU) based on the agruments passed.
 
-    croak "Agrument exclude must be an ARRAY"
-        if ($args{exclude} && !is_array_ref($args{exclude}) );
+Note agruments are passed into the method within a single hash of key value pairs.
 
-    my $include_EFTA = $args{include_efta} // 0;
-    my $exclude_arr  = $args{exclude} // [];
-    my $check_country = $args{country};
+=head3 ARGUMENTS
 
-    foreach my $country ( @{$EU_COUNTRY_MAP} )
-    {
-        if ( ! $include_EFTA ) {
-            if ( $country->{'EFTA-member'} ) {
-                next;
-            }
-        }
+=over 4
 
-        my @country_values = values $country;
-        if ( length $exclude_arr > 0 ) {
-            my $should_exclude;
-            foreach my $elt ( @{$exclude_arr} ) {
-                if ( grep /$elt/, @country_values ) {
-                    $should_exclude = 1;
-                    last;
-                }
-            }
+=item B<iso_code: STRING>
 
-            if ( $should_exclude ) {
-                next;
-            }
-        }
+When passed and a valid ISO type is provided this method will return an ARRAY[STR,] where each STR is the requested ISO
+code for each country.
 
-        foreach my $value ( values $country )
-        {
-            if ( ref($value) eq 'ARRAY' ) {
-                if ( grep( /^$check_country$/, @{$value} ) ) {
-                    return 1;
-                }
-            }
+    ISO-name    ex. Germany
+    ISO-m49     ex. 276
+    ISO-alpha3  ex. DEU
+    ISO-alpha2  ex. DE
 
-            if ( $value eq $check_country ) {
-                return 1;
-            }
-        }
-    }
+NOTE: You do not have to specific the ISO code agrument. If it is not supplied the unmodified EU country DataSet is returned
 
-    return 0;
-}
+=item B<include_efta: 1>
 
-sub list_eu_countries {
-    my %args = @_ == 1 && is_hash_ref( $_[0] ) ? %{ $_[0] } : @_;
+Modifies the European Union (EU) DataSet to include the European Free Trade Association (EFTA) countries. While not part of the "full" EU these additional countries can have EU laws or restrictions applied. Such as the case with GDPR.
 
-    croak "Agrument exclude must be an ARRAY"
-        if ($args{exclude} && ! is_array_ref($args{exclude}) );
+=item B<exclude: ARRARY[STR,]>
 
-    my $include_EFTA = $args{include_efta} // 0;
-    my $exclude_arr = $args{exclude} // [ ];
-    my $data_key = $args{iso_code};
+Allows the caller to modify the European Union (EU) DataSet so that certain countries are excluded. Each value in the passed array is checked against all ISO types in the DataSet.
 
-    if ( $data_key && ! grep( /^$data_key$/, @{$ISO_CODES} ) ) {
-        croak "Argument iso_code must be one of 'ISO-name', 'ISO-m49', 'ISO-alpha3', 'ISO-alpha2'";
-    }
+NOTE: You do not have to specific the ISO type being provided for flexiblity as it will cycle through each value automatically to find a match.
 
+=back
 
-    my @return_countries;
-
-    foreach my $country ( @{$EU_COUNTRY_MAP} )
-    {
-        if ( ! $include_EFTA ) {
-            if ( $country->{'EFTA-member'} ) {
-                next;
-            }
-        }
-
-        my @country_values = values $country;
-        if ( length $exclude_arr > 0 ) {
-            my $should_exclude;
-            foreach my $elt ( @{$exclude_arr} ) {
-                if ( grep /$elt/, @country_values ) {
-                    $should_exclude = 1;
-                    last;
-                }
-            }
-
-            if ( $should_exclude ) {
-                next;
-            }
-        }
-
-        if ( $data_key ) {
-            push @return_countries, $country->{$data_key};
-        } else {
-            push @return_countries, $country;
-        }
-    }
-
-    return \@return_countries;
-}
-
-1;
-
-__END__
+=cut
 
 =head1 COPYRIGHT AND LICENSE
 
