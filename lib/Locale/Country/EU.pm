@@ -246,7 +246,7 @@ sub is_eu_country {
             }
         }
 
-        my @country_values = values $country;
+        my @country_values = values %{ $country };
         if ( length $exclude_arr > 0 ) {
             my $should_exclude;
             foreach my $elt ( @{$exclude_arr} ) {
@@ -261,7 +261,7 @@ sub is_eu_country {
             }
         }
 
-        foreach my $value ( values $country )
+        foreach my $value ( @country_values )
         {
             if ( ref($value) eq 'ARRAY' ) {
                 if ( grep { /^$check_country$/xg } @{$value} ) {
@@ -303,7 +303,7 @@ sub list_eu_countries {
             }
         }
 
-        my @country_values = values $country;
+        my @country_values = values %{ $country };
         if ( length $exclude_arr > 0 ) {
             my $should_exclude;
             foreach my $elt ( @{$exclude_arr} ) {
