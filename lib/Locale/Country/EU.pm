@@ -250,7 +250,7 @@ sub is_eu_country {
         if ( length $exclude_arr > 0 ) {
             my $should_exclude;
             foreach my $elt ( @{$exclude_arr} ) {
-                if ( grep { /$elt/xg } @country_values ) {
+                if ( grep { /$elt/ } @country_values ) {
                     $should_exclude = 1;
                     last;
                 }
@@ -264,7 +264,7 @@ sub is_eu_country {
         foreach my $value ( @country_values )
         {
             if ( ref($value) eq 'ARRAY' ) {
-                if ( grep { /^$check_country$/xg } @{$value} ) {
+                if ( grep { /^$check_country$/ } @{$value} ) {
                     return 1;
                 }
             }
@@ -288,7 +288,7 @@ sub list_eu_countries {
     my $exclude_arr = $args{exclude} // [ ];
     my $data_key = $args{iso_code};
 
-    if ( $data_key && ! grep { /^$data_key$/xg } @{$ISO_CODES} ) {
+    if ( $data_key && ! grep { /^$data_key$/ } @{$ISO_CODES} ) {
         croak "Argument iso_code must be one of 'ISO-name', 'ISO-m49', 'ISO-alpha3', 'ISO-alpha2'";
     }
 
@@ -307,7 +307,7 @@ sub list_eu_countries {
         if ( length $exclude_arr > 0 ) {
             my $should_exclude;
             foreach my $elt ( @{$exclude_arr} ) {
-                if ( grep { /$elt/xg } @country_values ) {
+                if ( grep { /$elt/ } @country_values ) {
                     $should_exclude = 1;
                     last;
                 }
