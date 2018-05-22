@@ -288,7 +288,7 @@ sub list_eu_countries {
     my $exclude_arr = $args{exclude} // [ ];
     my $data_key = $args{iso_code};
 
-    if ( $data_key && ! grep { /^$data_key$/ } @{$ISO_CODES} ) {
+    if ( $data_key && ! grep { $data_key eq $_ } @{$ISO_CODES} ) {
         croak "Argument iso_code must be one of 'ISO-name', 'ISO-m49', 'ISO-alpha3', 'ISO-alpha2'";
     }
 
