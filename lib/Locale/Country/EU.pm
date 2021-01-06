@@ -105,12 +105,6 @@ our $EU_COUNTRY_MAP = [
         'ISO-alpha2' => 'SE',
     },
     {
-        'ISO-name'   => 'United Kingdom',
-        'ISO-m49'    => '826',
-        'ISO-alpha3' => 'GBR',
-        'ISO-alpha2' => 'GB',
-    },
-    {
         'ISO-name'   => 'Croatia',
         'ISO-m49'    => '191',
         'ISO-alpha3' => 'HRV',
